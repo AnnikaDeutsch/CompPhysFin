@@ -33,9 +33,10 @@ class Nbody_sim():
         self.n_objects=0
         self.G = 6.67430e-11
         self.msun = 2e30
-        self.AU_SI = 1.496e11
+        self.AU_SI = 1.496e11 # 1 AU in meters
         self.eta = 2e-4
         self.epsilon = self.AU_SI - 0.1*self.AU_SI
+        self.pc = 3.086e+16 # 1 parsec in meters
 
     def set_init_conds(self,n,posrange,velrange):
         '''set up the initial conditions for the globular cluster, return star_array'''
@@ -45,7 +46,7 @@ class Nbody_sim():
             x = []
             v = []
             for j in range(3):
-                x.append(random.uniform(-posrange*self.AU_SI, posrange*self.AU_SI))
+                x.append(random.uniform(-posrange*self.pc, posrange*self.pc))
                 v.append(random.uniform(-velrange, velrange))
             stars[i][0] = x #pos
             stars[i][1] = v #vel
@@ -511,16 +512,30 @@ class Star_Cluster():
         ax=plt.axes(projection='3d')
         ax.set_title('t = 0.0 days')
         print(self.axeslims)
-        ax.set_xlim3d(-self.axeslims,self.axeslims)
-        ax.set_ylim3d(-self.axeslims,self.axeslims)
-        ax.set_zlim3d(-self.axeslims,self.axeslims)
         # Accessing the saved data
+        X0, Y0, Z0 = self.find_trajectory(0)
+        graph=ax.scatter(X0, Y0, Z0,c='y',edgecolor="k")
         orbits=[]
-        for i in range(self.sim.n_objects):
+        for i in range(1,self.sim.n_objects):
             X,Y,Z=self.find_trajectory(i)
             orbits.append(ax.plot(X,Y,Z))
-        fig.show()
-        
+        ax.set_xlim3d(-max(X),max(X))
+        ax.set_ylim3d(-max(Y),max(Y))
+        ax.set_zlim3d(-max(Z),max(Z))
+        plt.pause(3)
+        t = len(self.record)
+        for j in range(1,t):
+            plt.pause(0.04)
+            graph._offsets3d=(X0, Y0, Z0)
+            for k in range(1,self.sim.n_objects):
+                X,Y,Z=self.find_trajectory(k)
+                line=orbits[k-1][0]
+                line.set_data(X,Y)
+                line.set_3d_properties(Z)
+                orbits[k-1]=[line]
+            ax.set_title('t = '+str(round(t*1.157e-5,))+' days')
+            plt.draw()
+
 
 
 #--------------------------functions-----------------------------------
